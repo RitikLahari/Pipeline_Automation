@@ -2,11 +2,7 @@
 
 Safe, local-first automation scaffolding for BDB Data Engineering Pipelines and a Claude Code skill that knows the verified capability boundary.
 
-The project can be a sibling of `bdbservices`, which was inspected as an implementation reference. It has no runtime import dependency on that folder.
-
-## Current status
-
-The existing BDB SDK exposes Data Engineering **Job** and job-canvas workflow APIs through `consumerName=BIZVIZPIPELINE`. Browser captures and the deployed editor source now verify `createPipeline`, `createPipelineWorkflow`, `getPipelineById`, `getAllComponentsInfo`, and `checkPipelineAvailableNewVersions` for the separate **Pipelines** canvas.
+The project can be a sibling of `bdbservices`, which was inspected as an implementation reference. It has no runtime import dependency on that folde
 
 Consequently:
 
@@ -34,39 +30,6 @@ Explicit Job request
     -> JobService
     -> BDBClient
     -> verified /cxf/bizviz/pluginService Job operations
-```
-
-## Folder structure
-
-```text
-bdb-pipeline-automation/
-|-- .claude/skills/bdb-pipeline/
-|   |-- SKILL.md
-|   `-- references/
-|       |-- authentication.md
-|       |-- bdb-sdk.md
-|       |-- examples.md
-|       `-- pipeline.md
-|-- scripts/
-|   |-- activate_pipeline.py
-|   |-- configure_pipeline.py
-|   |-- create_pipeline.py
-|   |-- list_components.py
-|   |-- list_pipeline_components.py
-|   |-- inspect_pipeline_workflow.py
-|   `-- verify_pipeline.py
-|-- src/bdb_pipeline/
-|   |-- auth.py
-|   |-- client.py
-|   |-- job_service.py
-|   |-- pipeline_service.py
-|   `-- utils.py
-|-- tests/
-|-- .env.example
-|-- .gitignore
-|-- pyproject.toml
-`-- requirements.txt
-```
 
 ## Relationship to `bdbservices`
 
@@ -154,115 +117,6 @@ python scripts/create_pipeline.py --name test-pipeline --dry-run
 ```
 
 Live standalone-pipeline create/configure/activate operations intentionally return exit code `2` until their endpoint and payload contracts are verified. The captured read/verify operation is available.
-
-## Creating a pipeline
-
-```bash
-python scripts/create_pipeline.py \
-  --name test-pipeline \
-  --description "Local pipeline test" \
-  --resource-allocation low \
-  --dry-run
-```
-
-The dry-run output previews `createPipeline`, derived `createPipelineWorkflow`, and verification. After reviewing the preview and authorizing the mutation, omit `--dry-run` to create the empty pipeline.
-
-## Configuring a pipeline
-
-Prepare a reviewed JSON object and run:
-
-```bash
-python scripts/configure_pipeline.py \
-  --pipeline-id PIPELINE_ID \
-  --config reviewed-config.json \
-  --dry-run
-```
-
-The project validates that the file contains a non-empty JSON object. It does not claim that this object is a valid BDB component/event graph until that schema is captured from BDB.
-
-## Activating a pipeline
-
-```bash
-python scripts/activate_pipeline.py --pipeline-id PIPELINE_ID --dry-run
-```
-
-Activation is planning-only for standalone pipelines. Do not substitute the Job `changeStatusJob` call: that endpoint activates a Job resource.
-
-## Verifying a pipeline
-
-Report discovered capabilities without a network call:
-
-```bash
-python scripts/verify_pipeline.py --pipeline-id PIPELINE_ID --capabilities
-```
-
-To verify an existing pipeline, run:
-
-```bash
-python scripts/verify_pipeline.py --pipeline-id dp_PIPELINE_ID --user-id USER_ID
-```
-
-The script reads configuration and credentials from `.env`. With `BDB_USER_EMAIL`, `BDB_PASSWORD`, and `BDB_CUSTOMERKEY`, it authenticates for a fresh token. Alternatively it uses `BDB_AUTH_TOKEN`; if neither is configured, it prompts using hidden input. It calls `getPipelineById` and reports the pipeline name, active/running/batch flags, resource limit, and component count without printing credentials.
-
-List the pipelines visible to the current user:
-
-```bash
-python scripts/list_pipelines.py --user-id USER_ID
-```
-
-## Existing registered model
-
-The current automation target assumes the model already exists and is registered. Model creation and training are not part of this skill. The next component-level API to capture is saving a DS Lab Runner configured with that model in either real-time or batch mode.
-
-Inspect the current DS Lab Runner template:
-
-```bash
-python scripts/list_components.py --user-id USER_ID --name "DSLab Runner"
-```
-
-Inspect components already added to a pipeline:
-
-```bash
-python scripts/list_pipeline_components.py --pipeline-id dp_PIPELINE_ID --user-id USER_ID
-```
-
-Add `--full` for the complete component objects. The captured real-time DS Lab Runner instance did not include selected project/model values, so its presence alone must not be reported as completed model configuration.
-
-The captured schema exposes `dsLabModelRunner` for an existing registered model and requires the DS Lab project and model selections. The component ID is discovered dynamically rather than hardcoded.
-
-## Verified Job operations
-
-`bdb_pipeline.job_service.JobService` provides these explicit Job calls:
-
-- `get_job_by_id`
-- `get_job_workflow`
-- `change_status_job`
-- `get_job_ui_logs`
-- `get_advance_logs`
-- `verify_job`
-
-They are not invoked by the standalone pipeline scripts. The existing full SDK should remain the preferred implementation for end-to-end Python Job creation because it already handles project provisioning, notebook registration, job creation/update, and the separate job workflow store.
-
-## Running unit tests
-
-```bash
-python -m pytest
-```
-
-The tests use fake clients and sessions. They do not call BDB services.
-
-## Integration testing
-
-No automatic integration tests are included because they would create external resources. Any future integration test must:
-
-1. Be separated from unit tests.
-2. Skip unless `BDB_INTEGRATION_TEST=true` is explicitly set.
-3. Obtain secrets at runtime.
-4. Use a non-production workspace.
-5. Avoid printing tokens or passwords.
-6. Clean up only resources created by that test and only after confirming their IDs.
-
-`BDB_INTEGRATION_TEST` is a test safety switch, not BDB platform configuration, so it is intentionally absent from `.env.example`.
 
 ## Claude Code skill
 
