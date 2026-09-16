@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: bdb-pipeline-automation
+Version: 0.1.0
+Summary: Safe local automation scaffolding for BDB Data Engineering pipelines
+Requires-Python: >=3.9
+Requires-Dist: requests>=2.28
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
